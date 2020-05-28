@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openCreatePanoActivity() {
-        Intent intent = new Intent(this, ArActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(this, ArActivity.class);
+        //startActivity(intent);
     }
 }
