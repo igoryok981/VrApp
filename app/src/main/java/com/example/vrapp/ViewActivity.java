@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.panoramagl.PLImage;
 import com.panoramagl.PLManager;
@@ -16,6 +17,7 @@ public class ViewActivity extends AppCompatActivity {
     private PLManager plManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view);
         plManager = new PLManager(this);
