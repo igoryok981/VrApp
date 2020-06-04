@@ -84,6 +84,7 @@ public class CreatePanoActivity extends AppCompatActivity {
     private TextureView mImageView;
     private int pCount = 0;
 
+    private OnSwipeTouchListener onSwipeTouchListener;
     private void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
@@ -168,6 +169,7 @@ public class CreatePanoActivity extends AppCompatActivity {
             //Log.e(LOG_TAG, e.getMessage());
             e.printStackTrace();
         }
+        //onSwipeTouchListener = new OnSwipeTouchListener(this, mImageView, mSurfaceViewOnTop);
     }
 
     /**
@@ -233,12 +235,12 @@ public class CreatePanoActivity extends AppCompatActivity {
                 Matrix matrix = new Matrix();
                 matrix.postRotate(90);
                 bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, bitmapImage.getWidth(), bitmapImage.getHeight(), matrix, false);
-                mBackgroundHandler.post(new ImageShow(bitmapImage, mSurfaceViewOnTop, mImageView.getHeight()));
+                //mBackgroundHandler.post(new ImageShow(bitmapImage, mSurfaceViewOnTop, mImageView.getHeight()));
                 mBackgroundHandler.post(new ImageSaver(bitmapImage, mFile));
+                mBackgroundHandler.post(new OnSwipeTouchListener(CreatePanoActivity.this, mImageView,
+                        mSurfaceViewOnTop, bitmapImage, mImageView.getHeight()));
                 photos.add(mFile.getPath());
                 pCount++;
-
-
             }
 
         };
@@ -348,5 +350,21 @@ public class CreatePanoActivity extends AppCompatActivity {
         super.onResume();
         startBackgroundThread();
     }
+
+    /*mSurfaceViewOnTop.setOnTouchListener(new OnSwipeTouchListener(CreatePanoActivity.this) {
+        public void onSwipeTop() {
+            Toast.makeText(CreatePanoActivity.this, "top", Toast.LENGTH_SHORT).show();
+        }
+        public void onSwipeRight() {
+            Toast.makeText(CreatePanoActivity.this, "right", Toast.LENGTH_SHORT).show();
+        }
+        public void onSwipeLeft() {
+            Toast.makeText(CreatePanoActivity.this, "left", Toast.LENGTH_SHORT).show();
+        }
+        public void onSwipeBottom() {
+            Toast.makeText(CreatePanoActivity.this, "bottom", Toast.LENGTH_SHORT).show();
+        }
+
+    });*/
 
 }
