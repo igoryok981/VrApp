@@ -8,31 +8,25 @@
 using namespace std;
 using namespace cv;
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_example_vrapp_CreatePanoActivity_stringFromJNI(
-        JNIEnv *env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
-}extern "C"
-JNIEXPORT void JNICALL
+extern "C"
+JNIEXPORT jboolean JNICALL
 Java_com_example_vrapp_CreatePanoActivity_stitch(JNIEnv *env, jobject thiz,
-                                                 jlongArray image_address_array,
-                                                 jlong output_address
-                                                 ) {
+                                                 jobjectArray image_names) {
     bool divide_images = false;
     Stitcher::Mode mode = Stitcher::PANORAMA;
     vector<Mat> imgs;
-    string result_name = "storage/emulated/0/Photos/result2.jpg";
-    string folder = "storage/emulated/0/Photos/";
+    string result_name = "storage/emulated/0/Photos/result_.jpg";
+    int stringCount = env->GetArrayLength(image_names);
 
-    for (int i = 0; i < 4; i++) {
-        char fullname[folder.length() + 5];
-        sprintf(fullname, "storage/emulated/0/Photos/s%d.jpg", i);
-        Mat img = imread(samples::findFile(fullname));
+    for (int i = 0; i < stringCount; i++) {
+        jstring instring = (jstring) (env->GetObjectArrayElement(image_names, i));
+        string rawString = env->GetStringUTFChars(instring, 0);
+        //char fullname[rawString.length() + 5];
+        //sprintf(fullname, "storage/emulated/0/Photos/pano%d.jpg", i);
+        Mat img = imread(samples::findFile(rawString));
         if (img.empty()) {
             //cout << "Can't read image '" << argv[i] << "'\n";
-            return;
+            return false;
         }
         if (divide_images) {
             Rect rect(0, 0, img.cols / 2, img.rows);
@@ -44,6 +38,7 @@ Java_com_example_vrapp_CreatePanoActivity_stitch(JNIEnv *env, jobject thiz,
         } else
             imgs.push_back(img);
         //delete[] fullname;
+        //env->ReleaseStringUTFChars(instring, 0);
     }
     Mat pano;
     Ptr<Stitcher> stitcher = Stitcher::create(mode);
@@ -51,9 +46,9 @@ Java_com_example_vrapp_CreatePanoActivity_stitch(JNIEnv *env, jobject thiz,
     if (status != Stitcher::OK)
     {
         //cout << "Can't stitch images, error code = " << int(status) << endl;
-        return;
+        return false;
     }
     imwrite(result_name, pano);
     //cout << "stitching completed successfully\n" << result_name << " saved!";
-    //return EXIT_SUCCESS;
+    return true;
 }
