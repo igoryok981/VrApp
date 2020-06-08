@@ -73,10 +73,8 @@ public class CreatePanoActivity extends AppCompatActivity {
     }
 
     private Button captureBtn, saveBtn; // used to interact with capture and save Button in UI
-    private SurfaceView mSurfaceView, mSurfaceViewOnTop; // used to display the camera frame in UI
-    private boolean isPreview; // Is the camera frame displaying?
-    private boolean safeToTakePicture = true; // Is it safe to capture
-    private List<Mat> listImage = new ArrayList<>();
+    private SurfaceView mSurfaceViewOnTop; // used to display the camera frame in UI
+    private TextView textView;
     private List<String> photos = new ArrayList<>();
 
     private HandlerThread mBackgroundThread;
@@ -86,7 +84,6 @@ public class CreatePanoActivity extends AppCompatActivity {
     private TextureView mImageView;
     private int pCount = 0;
 
-    private OnSwipeTouchListener onSwipeTouchListener;
     private void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
@@ -112,13 +109,13 @@ public class CreatePanoActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_create_pano);
 
-        isPreview = false;
         mSurfaceViewOnTop = (SurfaceView) findViewById(R.id.surfaceViewOnTop);
         mSurfaceViewOnTop.setZOrderOnTop(true);    // necessary
         mSurfaceViewOnTop.getHolder().setFormat(PixelFormat.TRANSPARENT);
         captureBtn = (Button) findViewById(R.id.capture);
         saveBtn = (Button) findViewById(R.id.save);
         mImageView = (TextureView) findViewById(R.id.imageView);
+        textView = (TextView) findViewById(R.id.textView);
 
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
                 ||
@@ -130,50 +127,42 @@ public class CreatePanoActivity extends AppCompatActivity {
         captureBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!myCameras[0].isOpen())
+                if (!myCameras[0].isOpen()) {
                     myCameras[0].openCamera();
-                else {
-                    String[] lPhotos = new String[photos.size()];
-                    photos.toArray(lPhotos);
-                    if (stitch(lPhotos)) {
-                        Toast toast = Toast.makeText(getApplicationContext(),
-                                "Успешно", Toast.LENGTH_LONG);
-                        toast.show();
-                    }
-                    else {
-                        Toast toast = Toast.makeText(getApplicationContext(),
-                                "Ошибка", Toast.LENGTH_LONG);
-                        toast.show();
-                    }
+                    captureBtn.setText("Снимок");
+                    saveBtn.setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.GONE);
                 }
-                //if (myCameras[0].isOpen()) myCameras[0].makePhoto();
+                else {
+                    myCameras[0].makePhoto();
+                }
             }
         });
 
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //if (!myCameras[0].isOpen()) myCameras[0].openCamera();
-                if (myCameras[0].isOpen()) myCameras[0].makePhoto();
+                String[] lPhotos = new String[photos.size()];
+                photos.toArray(lPhotos);
+                if (stitch(lPhotos)) {
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            "Склейка успешно завершена", Toast.LENGTH_LONG);
+                    toast.show();
+                }
+                else {
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            "Ошибка склейки", Toast.LENGTH_LONG);
+                    toast.show();
+                }
             }
         });
         mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
-            // Получение списка камер с устройства
             myCameras = new CameraService[mCameraManager.getCameraIdList().length];
-
-            //for (String cameraID : mCameraManager.getCameraIdList()) {
-            //Log.i(LOG_TAG, "cameraID: "+cameraID);
-            //int id = Integer.parseInt(cameraID);
-            // создаем обработчик для камеры
             myCameras[0] = new CameraService(mCameraManager, "0");
-
-            //}
         } catch (CameraAccessException e) {
-            //Log.e(LOG_TAG, e.getMessage());
             e.printStackTrace();
         }
-        //onSwipeTouchListener = new OnSwipeTouchListener(this, mImageView, mSurfaceViewOnTop);
     }
 
     /**
@@ -239,7 +228,6 @@ public class CreatePanoActivity extends AppCompatActivity {
                 Matrix matrix = new Matrix();
                 matrix.postRotate(90);
                 bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, bitmapImage.getWidth(), bitmapImage.getHeight(), matrix, false);
-                //mBackgroundHandler.post(new ImageShow(bitmapImage, mSurfaceViewOnTop, mImageView.getHeight()));
                 mBackgroundHandler.post(new ImageSaver(bitmapImage, mFile));
                 mBackgroundHandler.post(new OnSwipeTouchListener(CreatePanoActivity.this, mImageView,
                         mSurfaceViewOnTop, bitmapImage, mImageView.getHeight()));
@@ -320,12 +308,9 @@ public class CreatePanoActivity extends AppCompatActivity {
 
         public void openCamera() {
             try {
-
-                //if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.checkSelfPermission(CreatePanoActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                     mCameraManager.openCamera(mCameraID, mCameraCallback, mBackgroundHandler);
                 }
-                //}
 
             } catch (CameraAccessException e) {
                 //Log.i(LOG_TAG,e.getMessage());
@@ -355,20 +340,5 @@ public class CreatePanoActivity extends AppCompatActivity {
         startBackgroundThread();
     }
 
-    /*mSurfaceViewOnTop.setOnTouchListener(new OnSwipeTouchListener(CreatePanoActivity.this) {
-        public void onSwipeTop() {
-            Toast.makeText(CreatePanoActivity.this, "top", Toast.LENGTH_SHORT).show();
-        }
-        public void onSwipeRight() {
-            Toast.makeText(CreatePanoActivity.this, "right", Toast.LENGTH_SHORT).show();
-        }
-        public void onSwipeLeft() {
-            Toast.makeText(CreatePanoActivity.this, "left", Toast.LENGTH_SHORT).show();
-        }
-        public void onSwipeBottom() {
-            Toast.makeText(CreatePanoActivity.this, "bottom", Toast.LENGTH_SHORT).show();
-        }
-
-    });*/
 
 }
